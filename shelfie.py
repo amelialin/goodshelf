@@ -6,14 +6,11 @@ from hashlib import sha1,md5
 import requests
 import sys
 import urllib
-import unicodedata
 
 ACCESS_KEY="codex"
 SECRET_KEY="fSySMaec6abmeu6Mv3B4TV21PzKl7jCZiVjtcxvy8lAVJGCjjUwwjE6VqnKsMx4b"
 HOST = "apis.shelfie.com"
 
-def strip_unicode(value):
-    return unicodedata.normalize('NFKD', unicode(value)).encode('ascii','ignore')
 
 def hmac_auth(secret, value):
   return hmac.new(secret,value,sha1).digest().encode("base64")
@@ -39,15 +36,15 @@ def request_with_auth(method, url, body, headers):
   headers["Authorization"] = auth
 
   resp = requests.request(method, 'http://'+HOST+url, headers = headers, data = body)
-  resp.raise_for_status()
-  return resp.content
+  #resp.raise_for_status()
+  return resp
 
   
 
 def login_user(email):
   headers={"Content-Type": "application/json"}
   response = request_with_auth("GET", "/codex/login?email="+urllib.quote_plus(email), "", headers)
-  return json.loads(response)
+  return json.loads(response.content)
 
 
 def create_user(email, firstName, lastName):
@@ -55,7 +52,7 @@ def create_user(email, firstName, lastName):
   json_request = json.dumps(request)
   headers={"Content-Type": "application/json"}
   response = request_with_auth("POST", "/codex/users", json_request, headers)
-  return json.loads(response)
+  return json.loads(response.content)
 
 
 def submit_shelfie(userID, image_path):
@@ -66,23 +63,24 @@ def submit_shelfie(userID, image_path):
   headers["Content-Type"] = "image/jpeg"
   headers["Content-Length"] = len(body)
   response = request_with_auth("POST", "/codex/users/%s/shelfies"%userID, body, headers)
-  return json.loads(response)
+  return json.loads(response.content)
   
 
 def shelfie_status(shelfieID):
   headers={"Content-Type": "application/json"}
   response = request_with_auth("GET", "/codex/shelfies/%s/status"%shelfieID, "", headers)
-  return json.loads(response)
+  return json.loads(response.content)
   
 
 def user_books(userID):
   headers={"Content-Type": "application/json"}
   response = request_with_auth("GET", "/codex/users/%s/books"%userID, "", headers)
-  return json.loads(response)
+  return json.loads(response.content)
 
 def book_cover(isbn):
   headers={"Content-Type": "application/json"}
   response = request_with_auth("GET", "/codex/books/%s/cover"%isbn, "", headers)
+  response.raise_for_status()
   return response
 
 
@@ -93,14 +91,19 @@ def save_cover(body, name):
 
 if __name__ == "__main__" :
   userID = ""
+  resp={}
   print "-- Login user"
-  resp = login_user("marius.muja@shelfie.com")
-  print resp
+  try:
+    resp = login_user("amelialin0@gmail.com")
+    print resp
+  except:
+      pass
+
   if resp.has_key("userID"):
     userID = resp["userID"]
   else:
     print "-- Create user"    
-    resp = create_user("marius.muja@shelfie.com","Marius","Muja")
+    resp = create_user("amelialin0@gmail.com","Amelia","Lin")
     print resp
     if resp.has_key("userID"):
       userID = resp["userID"]
@@ -110,10 +113,11 @@ if __name__ == "__main__" :
     print "--  Submit shelfie"    
     resp = submit_shelfie(userID,sys.argv[1])
     print resp
+    shelfieID = resp['shelfieID']
 
 
   print "--  Shelfie status"    
-  resp = shelfie_status("GfajZqW8aSB")
+  resp = shelfie_status(shelfieID)
   print resp
 
   print "--  User status"    
@@ -122,7 +126,10 @@ if __name__ == "__main__" :
 
 
   print "-- Book cover"
-  resp = book_cover("9780061944895")
-  save_cover(resp, "9780061944895.jpg")
+  try:
+    resp = book_cover("9780061944895")
+    save_cover(resp, "9780061944895.jpg")
+  except:
+    print "Cover not found"
   print "done"
 
