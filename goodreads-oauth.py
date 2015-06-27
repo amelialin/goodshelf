@@ -44,33 +44,5 @@ access_token = dict(urlparse.parse_qsl(content))
 token = oauth.Token(access_token['oauth_token'],
                     access_token['oauth_token_secret'])
 
-# token = '77eLWZTQPCcdCs9S7ruDeA'
+print access_token
 
-#
-# As an example, let's add a book to one of the user's shelves
-#
-
-import urllib
-
-# transform isbn to book_id
-isbn = '9781449314323'
-query = url + '/book/isbn_to_id/'
-r = requests.get(
-        'https://www.goodreads.com/book/isbn_to_id/9781449314323?key=tS4AZr3qhInGYME1VeuQGg').json()
-
-print r
-# book_id = https://www.goodreads.com/book/isbn_to_id/0441172717?key=tS4AZr3qhInGYME1VeuQGg
-
-book_id = 20527133
-
-client = oauth.Client(consumer, token)
-# the book is: "Generation A" by Douglas Coupland
-body = urllib.urlencode({'name': 'to-read', 'book_id': book_id})
-headers = {'content-type': 'application/x-www-form-urlencoded'}
-response, content = client.request('%s/shelf/add_to_shelf.xml' % url,
-                                   'POST', body, headers)
-# check that the new resource has been created
-if response['status'] != '201':
-    raise Exception('Cannot create resource: %s' % response['status'])
-else:
-    print 'Book added!'
