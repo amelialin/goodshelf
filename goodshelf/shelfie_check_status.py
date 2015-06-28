@@ -94,15 +94,17 @@ def shelfie_check_for_isbns(shelfie_id):
     isbns = map(strip_unicode, resp["books"])
     print len(isbns)
     conn = sqlite3.connect('goodshelf')
-    with conn:
-        cursor = conn.cursor()
-        for isbn in isbns:
+    cursor = conn.cursor()
+    for isbn in isbns:
+        book_id = add_book_to_shelf.add_book_by_isbn(isbn)
+        if book_id:
+            print "yeah book added!", book_id
+            cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn, gr_book_id) values (?,?,?);", (shelfie_id, isbn, book_id))
+        else:
+            print "gotta add it manually :(", isbn
             cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn) values (?,?);", (shelfie_id, isbn))
-            # db.insert('shelfie_books', shelfie_id=shelfie_id, isbn=isbn)
-            # if add_book_to_shelf.add_book_by_isbn(isbn):
-                # pass
+        conn.commit()
     conn.close()
-
 
 if __name__ == "__main__" :
     from sys import argv
