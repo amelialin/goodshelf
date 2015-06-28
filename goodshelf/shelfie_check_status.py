@@ -61,19 +61,19 @@ def shelfie_check_status(shelfie_id, image_path, shelf_name):
     # login user to get userID
     userID = ""
     resp={}
-    print "-- Login user"
+    # print "-- Login user"
     try:
         resp = login_user("amelialin0@gmail.com")
-        print resp
+        # print resp
     except:
         pass
 
     if resp.has_key("userID"):
         userID = resp["userID"]
     else:
-        print "-- Create user"    
+        # print "-- Create user"    
         resp = create_user("amelialin0@gmail.com","Amelia","Lin")
-        print resp
+        # print resp
         if resp.has_key("userID"):
             userID = resp["userID"]
 

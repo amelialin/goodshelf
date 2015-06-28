@@ -35,7 +35,7 @@ def check_for_shelf(shelf_name):
     # return False
 
     # add new shelf
-    body = urllib.urlencode({'user_shelf[name]': 'test_shelf'})
+    body = urllib.urlencode({'user_shelf[name]': shelf_name})
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     response, content = client.request('%s/user_shelves.xml' % url, 'POST', body, headers)
     
@@ -46,6 +46,7 @@ def check_for_shelf(shelf_name):
     if response['status'] != '201':
         raise Exception('Cannot create resource: %s' % response['status'])
     else:
+        print shelf_name, "shelf created!"
         return True
 
 if __name__ == "__main__":

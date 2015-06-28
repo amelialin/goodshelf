@@ -63,10 +63,10 @@ def submit_shelfie(image_path, shelf_name):
     resp={}
 
     # login user
-    print "-- Login user"
+    # print "-- Login user"
     try:
         resp = login_user(LOGIN_USER_EMAIL)
-        print resp
+        # print resp
     except:
          pass
 
