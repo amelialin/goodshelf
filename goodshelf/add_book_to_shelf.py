@@ -40,6 +40,26 @@ def add_book_by_isbn(isbn):
     else:
         return book_id
 
+# def add_books_to_gr(isbns):
+#     for isbn in isbn_list:
+#         add_book_by_isbn(isbn)
+
+#     # add isbns from processed books to goodreads
+#     isbns = map(strip_unicode, resp["books"])
+#     print len(isbns)
+#     conn = sqlite3.connect('goodshelf')
+#     cursor = conn.cursor()
+#     for isbn in isbns:
+#         book_id = add_book_to_shelf.add_book_by_isbn(isbn)
+#         if book_id:
+#             print "yeah book added!", book_id
+#             cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn, gr_book_id) values (?,?,?);", (shelfie_id, isbn, book_id))
+#         else:
+#             print "gotta add it manually :(", isbn
+#             cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn) values (?,?);", (shelfie_id, isbn))
+#         conn.commit()
+#     conn.close()
+
 if __name__ == "__main__":
     from sys import argv
     script, isbn = argv
