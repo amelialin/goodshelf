@@ -15,9 +15,6 @@ ACCESS_KEY="codex"
 SECRET_KEY="fSySMaec6abmeu6Mv3B4TV21PzKl7jCZiVjtcxvy8lAVJGCjjUwwjE6VqnKsMx4b"
 HOST = "apis.shelfie.com"
 
-# connect to sqlite db
-# db = web.database(dbn='sqlite', db='goodshelf')
-
 def hmac_auth(secret, value):
     return hmac.new(secret,value,sha1).digest().encode("base64")
 
@@ -60,12 +57,7 @@ def create_user(email, firstName, lastName):
 def strip_unicode(value):
     return unicodedata.normalize('NFKD', unicode(value)).encode('ascii','ignore')
 
-def shelfie_status(shelfie_id):
-    headers={"Content-Type": "application/json"}
-    response = request_with_auth("GET", "/codex/shelfies/%s/status"%shelfie_id, "", headers)
-    return json.loads(response.content)
-
-def shelfie_check_for_isbns(shelfie_id):
+def shelfie_check_status(shelfie_id, image_path, shelf_name):
     # login user to get userID
     userID = ""
     resp={}
@@ -85,18 +77,44 @@ def shelfie_check_for_isbns(shelfie_id):
         if resp.has_key("userID"):
             userID = resp["userID"]
 
-    # check for shelfie ID input
-    if len(sys.argv)>1 and userID!="":
-        print "--  Shelfie status"   
-        resp = shelfie_status(sys.argv[1])
-        print resp
+    # check shelfie status
+    if userID == "":
+        raise Exception('Missing user ID.')
+    print "--  Shelfie status"   
+    headers={"Content-Type": "application/json"}
+    response = request_with_auth("GET", "/codex/shelfies/%s/status"%shelfie_id, "", headers)
+    resp = json.loads(response.content)
+    print resp
+    print image_path
 
+    # if no books have been processed yet
+    if "books" not in resp:
+        print "no books yet!"
+        return 'pending'
+
+    all_book_data = resp["booksMetadata"]
+    # print all_book_data
+    for book in all_book_data:
+        # print book
+        if 'isbn' in book:
+            print book['isbn'], book['title']
+        elif ('title' in book) or ('authors' in book):
+            search_string = ""
+            if 'title' in book:
+                search_string += book['title']
+            if 'authors' in book:
+                search_string += book['authors']
+            print search_string
+        else:
+            print book['spineImage']
+
+    # add isbns from processed books to goodreads
     isbns = map(strip_unicode, resp["books"])
-    print len(isbns)
+    print len(isbns), "books processed:"
     conn = sqlite3.connect('goodshelf')
     cursor = conn.cursor()
     for isbn in isbns:
-        book_id = add_book_to_shelf.add_book_by_isbn(isbn)
+        book_id = add_book_to_shelf.add_book_by_isbn(isbn, shelf_name)
         if book_id:
             print "yeah book added!", book_id
             cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn, gr_book_id) values (?,?,?);", (shelfie_id, isbn, book_id))
@@ -106,13 +124,11 @@ def shelfie_check_for_isbns(shelfie_id):
         conn.commit()
     conn.close()
 
+    return resp["status"]
+
 if __name__ == "__main__" :
     from sys import argv
     if len(argv)<2:
         raise Exception('Too few arguments.')
-    script, shelfie_id = argv
-    shelfie_check_for_isbns(shelfie_id)
-
-
-
-
+    script, shelfie_id, image_path = argv
+    shelfie_check_status(shelfie_id, image_path, shelf_name)

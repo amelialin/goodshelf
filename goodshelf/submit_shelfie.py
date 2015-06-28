@@ -58,7 +58,7 @@ def shelfie_status(shelfieID):
     response = request_with_auth("GET", "/codex/shelfies/%s/status"%shelfieID, "", headers)
     return json.loads(response.content)
 
-def submit_shelfie(image_path):
+def submit_shelfie(image_path, shelf_name):
     userID = ""
     resp={}
 
@@ -100,7 +100,7 @@ def submit_shelfie(image_path):
     resp = shelfie_status(shelfieID)
     print resp
 
-    return shelfieID, image_path
+    return shelfieID, image_path, shelf_name
 
 if __name__ == "__main__" :
     from sys import argv

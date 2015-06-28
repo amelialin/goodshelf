@@ -4,8 +4,8 @@ import requests
 import urllib
 requests.packages.urllib3.disable_warnings()
 
-def add_book_by_isbn(isbn, shelf_name):
-    """Adds book to user's to-read shelf, given the book's ISBN as a string"""
+def check_for_shelf(shelf_name):
+    """Checks to see if shelf exists, if it doesn't, creates it"""
 
     url = 'http://www.goodreads.com'
     request_token_url = '%s/oauth/request_token' % url
@@ -18,31 +18,37 @@ def add_book_by_isbn(isbn, shelf_name):
     # these come from running goodreads-oauth.py
     USER_TOKEN = 'jOQ9CNoSqoRpzwgAc9pjA'
     USER_SECRET = 'VKhP4N0YMVxLETi8lKew636vchBirQa6YTD9upct18'
+    USER_ID = '7308319'
 
     consumer = oauth.Consumer(key=APP_KEY,
                               secret=APP_SECRET)
 
     token = oauth.Token(USER_TOKEN, USER_SECRET)
 
-    # transform isbn to book_id
-    query = url + '/book/isbn_to_id/' + isbn    
-    book_id = requests.get(query, params={'key': APP_KEY}).content
-    if book_id == ' ':
-        return False
-
-    # add book to shelf
     client = oauth.Client(consumer, token)
-    body = urllib.urlencode({'name': shelf_name, 'book_id': book_id})
+    
+    # check for existing shelf
+    # query = url + '/shelf/list.xml'   
+    # # https://www.goodreads.com/shelf/list.xml?key=tS4AZr3qhInGYME1VeuQGg 
+    # user_shelves = requests.get(query, params={'key': APP_KEY, 'user_id': USER_ID}).content
+    # print user_shelves
+    # return False
+
+    # add new shelf
+    body = urllib.urlencode({'user_shelf[name]': 'test_shelf'})
     headers = {'content-type': 'application/x-www-form-urlencoded'}
-    response, content = client.request('%s/shelf/add_to_shelf.xml' % url, 'POST', body, headers)
+    response, content = client.request('%s/user_shelves.xml' % url, 'POST', body, headers)
     
     # check that the new resource has been created
+    if response['status'] == '409':
+        print shelf_name, "shelf already exists"
+        return True
     if response['status'] != '201':
         raise Exception('Cannot create resource: %s' % response['status'])
     else:
-        return book_id
+        return True
 
 if __name__ == "__main__":
     from sys import argv
-    script, isbn = argv
-    print add_book_by_isbn(isbn, shelf_name)
+    script, shelf_name = argv
+    print check_for_shelf(shelf_name)
