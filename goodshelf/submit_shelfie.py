@@ -100,6 +100,8 @@ def submit_shelfie(image_path):
     resp = shelfie_status(shelfieID)
     print resp
 
+    return shelfieID, image_path
+
 if __name__ == "__main__" :
     from sys import argv
     if len(argv) < 2:
