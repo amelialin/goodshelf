@@ -9,13 +9,14 @@ import urllib
 import unicodedata
 import add_book_to_shelf
 import web
+import sqlite3
 
 ACCESS_KEY="codex"
 SECRET_KEY="fSySMaec6abmeu6Mv3B4TV21PzKl7jCZiVjtcxvy8lAVJGCjjUwwjE6VqnKsMx4b"
 HOST = "apis.shelfie.com"
 
 # connect to sqlite db
-db = web.database(dbn='sqlite', db='goodshelf')
+# db = web.database(dbn='sqlite', db='goodshelf')
 
 def hmac_auth(secret, value):
     return hmac.new(secret,value,sha1).digest().encode("base64")
@@ -92,10 +93,15 @@ def shelfie_check_for_isbns(shelfie_id):
 
     isbns = map(strip_unicode, resp["books"])
     print len(isbns)
-    for isbn in isbns:
-        db.insert('shelfie_books', shelfie_id=shelfie_id, isbn=isbn)
-        # if add_book_to_shelf.add_book_by_isbn(isbn):
-            # pass
+    conn = sqlite3.connect('goodshelf')
+    with conn:
+        cursor = conn.cursor()
+        for isbn in isbns:
+            cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn) values (?,?);", (shelfie_id, isbn))
+            # db.insert('shelfie_books', shelfie_id=shelfie_id, isbn=isbn)
+            # if add_book_to_shelf.add_book_by_isbn(isbn):
+                # pass
+    conn.close()
 
 
 if __name__ == "__main__" :
