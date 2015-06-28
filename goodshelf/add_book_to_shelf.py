@@ -25,20 +25,20 @@ def add_book_by_isbn(isbn):
     token = oauth.Token(USER_TOKEN, USER_SECRET)
 
     # transform isbn to book_id
-    query = url + '/book/isbn_to_id/' + isbn
-    book_id = requests.get(query, params={'key': APP_KEY}).json()
-
+    query = url + '/book/isbn_to_id/' + isbn    
+    book_id = requests.get(query, params={'key': APP_KEY}).content
+    if book_id == ' ':
+        return False
     client = oauth.Client(consumer, token)
     body = urllib.urlencode({'name': 'to-read', 'book_id': book_id})
     headers = {'content-type': 'application/x-www-form-urlencoded'}
-    response, content = client.request('%s/shelf/add_to_shelf.xml' % url,
-                                       'POST', body, headers)
+    response, content = client.request('%s/shelf/add_to_shelf.xml' % url, 'POST', body, headers)
     
     # check that the new resource has been created
     if response['status'] != '201':
         raise Exception('Cannot create resource: %s' % response['status'])
     else:
-        print 'Book added!'
+        return book_id
 
 if __name__ == "__main__":
     from sys import argv
