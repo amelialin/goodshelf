@@ -26,6 +26,7 @@ def add_book_by_isbn(isbn, shelf_name):
 
     # transform isbn to book_id
     query = url + '/book/isbn_to_id/' + isbn    
+    # print requests.get(query, params={'key': APP_KEY})
     book_id = requests.get(query, params={'key': APP_KEY}).content
     if book_id == ' ':
         return False
@@ -44,5 +45,5 @@ def add_book_by_isbn(isbn, shelf_name):
 
 if __name__ == "__main__":
     from sys import argv
-    script, isbn = argv
+    script, isbn, shelf_name = argv
     print add_book_by_isbn(isbn, shelf_name)

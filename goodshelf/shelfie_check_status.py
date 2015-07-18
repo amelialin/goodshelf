@@ -130,5 +130,5 @@ if __name__ == "__main__" :
     from sys import argv
     if len(argv)<2:
         raise Exception('Too few arguments.')
-    script, shelfie_id, image_path = argv
+    script, shelfie_id, image_path, shelf_name = argv
     shelfie_check_status(shelfie_id, image_path, shelf_name)

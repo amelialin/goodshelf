@@ -4,17 +4,22 @@ import time
 import check_for_shelf
 
 def goodshelf(image_path, shelf_name):
+    """Given an bookshelf image and a shelf name, will add all books in the image to a corresponding GR shelf, as well as your 'read' shelf."""
+    sleep_time = 10
     if check_for_shelf.check_for_shelf(shelf_name):
         pass
     else:
         raise Exception('Something went wrong with creating your shelf.')
     shelfie_info = submit_shelfie.submit_shelfie(image_path, shelf_name)
-    time.sleep(10)
+    time.sleep(sleep_time)
     status = shelfie_check_status.shelfie_check_status(*shelfie_info)
+    i = 1
     while status != 'success':
-        time.sleep(10)
+        print "Scan #", i
+        time.sleep(sleep_time)
         status = shelfie_check_status.shelfie_check_status(*shelfie_info)
-        "still pending!"
+        print "Scanning..."
+        i += 1
 
 if __name__ == "__main__":
     from sys import argv

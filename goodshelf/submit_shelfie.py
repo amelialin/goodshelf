@@ -106,5 +106,5 @@ if __name__ == "__main__" :
     from sys import argv
     if len(argv) < 2:
         raise Exception('Too few arguments.')
-    script, image_path = argv
-    print submit_shelfie(image_path)
+    script, image_path, shelf_name = argv
+    print submit_shelfie(image_path, shelf_name)
