@@ -16,9 +16,9 @@ def goodshelf(image_path, shelf_name):
     i = 1
     while status != 'success':
         print "Scan #", i
+        print "Scanning..."
         time.sleep(sleep_time)
         status = shelfie_check_status.shelfie_check_status(*shelfie_info)
-        print "Scanning..."
         i += 1
 
 if __name__ == "__main__":

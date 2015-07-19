@@ -84,7 +84,7 @@ def shelfie_check_status(shelfie_id, image_path, shelf_name):
     headers={"Content-Type": "application/json"}
     response = request_with_auth("GET", "/codex/shelfies/%s/status"%shelfie_id, "", headers)
     resp = json.loads(response.content)
-    print resp
+    # print resp
     print image_path
 
     # if no books have been processed yet
@@ -92,37 +92,46 @@ def shelfie_check_status(shelfie_id, image_path, shelf_name):
         print "no books yet!"
         return 'pending'
 
+    # print out overview of progress
     all_book_data = resp["booksMetadata"]
     # print all_book_data
     for book in all_book_data:
         # print book
+        # print book['spineImage']
         if 'isbn' in book:
-            print book['isbn'], book['title']
+            print book['spineImage'], book['isbn'], book['title']
         elif ('title' in book) or ('authors' in book):
             search_string = ""
             if 'title' in book:
                 search_string += book['title']
             if 'authors' in book:
                 search_string += book['authors']
-            print search_string
+            print book['spineImage'], search_string
         else:
             print book['spineImage']
+    print len(all_book_data), "books detected,", len(resp["books"]), "ISBNs identified"
 
     # add isbns from processed books to goodreads
-    isbns = map(strip_unicode, resp["books"])
-    print len(isbns), "books processed:"
-    conn = sqlite3.connect('goodshelf')
-    cursor = conn.cursor()
-    for isbn in isbns:
-        book_id = add_book_to_shelf.add_book_by_isbn(isbn, shelf_name)
-        if book_id:
-            print "yeah book added!", book_id
-            cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn, gr_book_id) values (?,?,?);", (shelfie_id, isbn, book_id))
-        else:
-            print "gotta add it manually :(", isbn
-            cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn) values (?,?);", (shelfie_id, isbn))
-        conn.commit()
-    conn.close()
+    # isbns = map(strip_unicode, resp["books"])
+    
+    # booksMetadata = resp["booksMetadata"]
+    # print booksMetadata
+    # for book in all_book_data:
+    #     print book.get('spineImage')
+    # print resp["booksMetadata"][1].get('spineImage')
+
+    # conn = sqlite3.connect('goodshelf')
+    # cursor = conn.cursor()
+    # for isbn in isbns:
+    #     book_id = add_book_to_shelf.add_book_by_isbn(isbn, shelf_name)
+    #     if book_id:
+    #         print "yeah book added!", book_id
+    #         cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn, gr_book_id) values (?,?,?);", (shelfie_id, isbn, book_id))
+    #     else:
+    #         print "gotta add it manually :(", isbn
+    #         cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn) values (?,?);", (shelfie_id, isbn))
+    #     conn.commit()
+    # conn.close()
 
     return resp["status"]
 
