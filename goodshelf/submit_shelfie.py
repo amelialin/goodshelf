@@ -100,7 +100,7 @@ def submit_shelfie(image_path, shelf_name):
     resp = shelfie_status(shelfieID)
     print resp
 
-    return shelfieID, image_path, shelf_name
+    return shelfieID, shelf_name, image_path
 
 if __name__ == "__main__" :
     from sys import argv

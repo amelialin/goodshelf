@@ -57,7 +57,8 @@ def create_user(email, firstName, lastName):
 def strip_unicode(value):
     return unicodedata.normalize('NFKD', unicode(value)).encode('ascii','ignore')
 
-def shelfie_check_status(shelfie_id, image_path, shelf_name):
+def shelfie_check_status(shelfie_id, shelf_name="NONE", image_path="NONE"):
+    """Checks status of a submitted shelfie, given the shelfie ID. If supplied a shelf_name, will also upload any identified books to the corresponding Goodreads shelf."""
     # login user to get userID
     userID = ""
     resp={}
@@ -73,7 +74,7 @@ def shelfie_check_status(shelfie_id, image_path, shelf_name):
     else:
         # print "-- Create user"    
         resp = create_user("amelialin0@gmail.com","Amelia","Lin")
-        # print resp
+        print resp
         if resp.has_key("userID"):
             userID = resp["userID"]
 
@@ -84,8 +85,8 @@ def shelfie_check_status(shelfie_id, image_path, shelf_name):
     headers={"Content-Type": "application/json"}
     response = request_with_auth("GET", "/codex/shelfies/%s/status"%shelfie_id, "", headers)
     resp = json.loads(response.content)
-    # print resp
-    print image_path
+    print resp
+    print "Image path:", image_path
 
     # if no books have been processed yet
     if "books" not in resp:
@@ -109,35 +110,47 @@ def shelfie_check_status(shelfie_id, image_path, shelf_name):
             print book['spineImage'], search_string
         else:
             print book['spineImage']
-    print len(all_book_data), "books detected,", len(resp["books"]), "ISBNs identified"
+    print len(all_book_data), "books detected,", len(resp["books"]), "ISBNs identified,", len(all_book_data) - len(resp["books"]), "books unidentified ISBNs"
 
     # add isbns from processed books to goodreads
-    # isbns = map(strip_unicode, resp["books"])
-    
-    # booksMetadata = resp["booksMetadata"]
-    # print booksMetadata
-    # for book in all_book_data:
-    #     print book.get('spineImage')
-    # print resp["booksMetadata"][1].get('spineImage')
+    if shelf_name != "NONE":
+        conn = sqlite3.connect('goodshelf')
+        cursor = conn.cursor()
+        unidentified_books = []
+        for book in all_book_data:
+            spine_image = book['spineImage']
+            print spine_image
+            # submit detected ISBNs to Goodreads
+            if 'isbn' in book:
+                isbn = book['isbn']
+                book_id = add_book_to_shelf.add_book_by_isbn(isbn, shelf_name)
+                if book_id:
+                    print "yeah book added!", book_id
+                    cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn, gr_book_id, spine_image) values (?,?,?,?);", (shelfie_id, isbn, book_id, spine_image))
+                else:
+                    print "gotta add it manually :(", isbn, book['title'], book['authors']
+                    cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn, spine_image) values (?,?,?);", (shelfie_id, isbn, spine_image))
+            else:
+                unidentified_books.append(spine_image)
+            conn.commit()
+        conn.close()
 
-    # conn = sqlite3.connect('goodshelf')
-    # cursor = conn.cursor()
-    # for isbn in isbns:
-    #     book_id = add_book_to_shelf.add_book_by_isbn(isbn, shelf_name)
-    #     if book_id:
-    #         print "yeah book added!", book_id
-    #         cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn, gr_book_id) values (?,?,?);", (shelfie_id, isbn, book_id))
-    #     else:
-    #         print "gotta add it manually :(", isbn
-    #         cursor.execute("INSERT INTO shelfie_books(shelfie_id, isbn) values (?,?);", (shelfie_id, isbn))
-    #     conn.commit()
-    # conn.close()
+        # return spine images for unidentified books
+        print "Unidentified books:"
+        print unidentified_books
 
     return resp["status"]
 
 if __name__ == "__main__" :
     from sys import argv
-    if len(argv)<2:
-        raise Exception('Too few arguments.')
-    script, shelfie_id, image_path, shelf_name = argv
-    shelfie_check_status(shelfie_id, image_path, shelf_name)
+    if len(argv) == 4:
+        script, shelfie_id, shelf_name, image_path = argv
+        shelfie_check_status(shelfie_id, shelf_name, image_path)
+    elif len(argv) ==3:
+        script, shelfie_id, shelf_name = argv
+        shelfie_check_status(shelfie_id, shelf_name)
+    elif len(argv) == 2:
+        script, shelfie_id = argv
+        shelfie_check_status(shelfie_id)
+    else:
+        raise Exception('Use 1-3 arguments.')
